@@ -1,0 +1,53 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+wheels/
+*.egg-info
+*.egg
+build/
+dist/
+.eggs/
+
+# Linter/formatter caches
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+
+.DS_Store
+temp/
+*.bak
+
+# Virtual environments
+.venv
+
+# Scripts
+redeploy.sh
+publish*.sh
+
+.idea
+
+# Generated files
+*.pids
+*.pid
+logs/
+config*.yml
+*/config*.yml
+
+data/
+plan/
+.files
+
+!.env.example
+.env*
+
+# Cursor
+.cursorrules
+.cursorignore
+
+# Test files (temporary)
+test_*.py
+quick_test.py
+
+# Keep important files
+!LICENSE
+!README.md

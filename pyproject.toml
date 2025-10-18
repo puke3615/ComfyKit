@@ -1,0 +1,78 @@
+[project]
+name = "comfykit"
+version = "0.1.1"
+description = "ComfyUI Python SDK for developers - Build AI generation into your app"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+  { name = "Fan Wu", email = "1129090915@qq.com" }
+]
+keywords = ["ComfyUI", "SDK", "AI", "Image Generation", "API", "Stable Diffusion", "FLUX", "RunningHub"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Operating System :: OS Independent",
+  "Intended Audience :: Developers",
+  "Topic :: Software Development :: Libraries :: Application Frameworks",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Multimedia :: Graphics",
+]
+dependencies = [
+    "httpx>=0.25.0",
+    "websockets>=12.0",
+    "pydantic>=2.0",
+    "aiofiles>=23.0",
+    "pillow>=10.0",
+    "aiohttp>=3.9.0",
+    "tomli>=2.0.0; python_version<'3.11'",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-asyncio>=0.21",
+    "black>=23.0",
+    "ruff>=0.1.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/puke3615/ComfyKit"
+Repository = "https://github.com/puke3615/ComfyKit"
+Issues = "https://github.com/puke3615/ComfyKit/issues"
+
+[tool.hatch.build]
+include = [
+  "comfykit/**",
+  "README*.md",
+  "LICENSE",
+  "workflows/**",
+  "pyproject.toml",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["comfykit"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"workflows" = "workflows"
+
+[[tool.uv.index]]
+name = "pypi"
+url = "https://pypi.org/simple/"
+publish-url = "https://upload.pypi.org/legacy/"
+explicit = true
+
+[[tool.uv.index]]
+name = "testpypi"
+url = "https://test.pypi.org/simple/"
+publish-url = "https://test.pypi.org/legacy/"
+explicit = true
+
+[build-system]
+requires = ["hatchling>=1.21.0"]
+build-backend = "hatchling.build"

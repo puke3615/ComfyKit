@@ -1,0 +1,21 @@
+# Ruff configuration for ComfyKit
+# https://docs.astral.sh/ruff/
+
+line-length = 120
+
+[lint]
+# Enable pycodestyle (`E`), Pyflakes (`F`), and isort (`I`)
+select = ["E", "F", "W", "I"]
+
+# Ignore specific rules
+ignore = [
+    "E501",  # Line too long - allow longer lines for readability
+]
+
+# Allow fix for all enabled rules
+fixable = ["ALL"]
+unfixable = []
+
+[lint.per-file-ignores]
+"__init__.py" = ["F401"]  # Allow unused imports in __init__.py files
+

@@ -227,6 +227,311 @@ print(f"Thumbnail: {result.images_by_var['thumbnail']}")
 
 ---
 
+## 🏷️ Workflow DSL Quick Reference
+
+ComfyKit provides a concise DSL (Domain Specific Language) for marking workflow nodes, allowing you to:
+- Define dynamic parameters
+- Mark output variables
+- Specify required/optional parameters
+- Automatically handle media file uploads
+
+### DSL Syntax Quick Reference
+
+| Syntax | Description | Example | Effect |
+|--------|-------------|---------|--------|
+| `$param` | Basic parameter (shorthand) | `$prompt` | Parameter `prompt`, maps to field `prompt` |
+| `$param.field` | Specify field mapping | `$prompt.text` | Parameter `prompt`, maps to field `text` |
+| `$param!` | Required parameter | `$prompt!` | Parameter `prompt` is required, no default |
+| `$~param` | Media parameter (upload) | `$~image` | Parameter `image` requires file upload |
+| `$~param!` | Required media parameter | `$~image!` | Parameter `image` is required and needs upload |
+| `$param.~field!` | Combined markers | `$img.~image!` | Parameter `img` maps to `image`, required and upload |
+| `$output.name` | Output variable marker | `$output.cover` | Mark output variable name as `cover` |
+| `Text, $p1, $p2` | Multiple parameters | `Size, $width!, $height!` | Define multiple parameters in one node |
+
+### Parameter Marking Examples
+
+#### 1. Text Prompt Parameter
+
+In a ComfyUI workflow CLIPTextEncode node:
+
+```json
+{
+  "6": {
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "$prompt.text!"
+    },
+    "inputs": {
+      "text": "a beautiful landscape",
+      "clip": ["4", 1]
+    }
+  }
+}
+```
+
+**Marker explanation**:
+- `$prompt` - Parameter name is `prompt`
+- `.text` - Maps to node's `text` field
+- `!` - Required parameter, must be provided
+
+**Usage**:
+```python
+result = await kit.execute("workflow.json", {
+    "prompt": "a cute cat"  # Replaces inputs.text value
+})
+```
+
+#### 2. Image Upload Parameter
+
+In a LoadImage node:
+
+```json
+{
+  "10": {
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "$~input_image!"
+    },
+    "inputs": {
+      "image": "default.png"
+    }
+  }
+}
+```
+
+**Marker explanation**:
+- `$~input_image!` - Parameter `input_image`, needs upload (`~`), required (`!`)
+- ComfyKit handles file upload automatically
+
+**Usage**:
+```python
+result = await kit.execute("workflow.json", {
+    "input_image": "/path/to/cat.jpg"  # Automatically uploads to ComfyUI
+})
+```
+
+#### 3. Multiple Parameters in One Node
+
+```json
+{
+  "5": {
+    "class_type": "EmptyLatentImage",
+    "_meta": {
+      "title": "Size, $width!, $height!"
+    },
+    "inputs": {
+      "width": 512,
+      "height": 512,
+      "batch_size": 1
+    }
+  }
+}
+```
+
+**Marker explanation**:
+- `Size` - Display text, not a parameter
+- `$width!` - Required parameter `width` (shorthand, maps to same field)
+- `$height!` - Required parameter `height`
+
+**Usage**:
+```python
+result = await kit.execute("workflow.json", {
+    "width": 1024,
+    "height": 768
+})
+```
+
+#### 4. Optional Parameters (with defaults)
+
+```json
+{
+  "3": {
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "Sampler, $seed, $steps"
+    },
+    "inputs": {
+      "seed": 0,          # Default value 0
+      "steps": 20,        # Default value 20
+      "cfg": 8.0,
+      "model": ["4", 0]
+    }
+  }
+}
+```
+
+**Marker explanation**:
+- `$seed` and `$steps` have no `!`, they are optional
+- If not provided, uses default values from workflow
+
+**Usage**:
+```python
+# Use defaults
+result = await kit.execute("workflow.json", {})
+
+# Override some parameters
+result = await kit.execute("workflow.json", {
+    "seed": 42  # Only override seed, steps uses default 20
+})
+```
+
+### Output Marking Examples
+
+#### 1. Using Output Variable Marker
+
+```json
+{
+  "9": {
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "$output.cover"
+    },
+    "inputs": {
+      "filename_prefix": "book_cover",
+      "images": ["8", 0]
+    }
+  }
+}
+```
+
+**Marker explanation**:
+- `$output.cover` - Mark this node's output as `cover` variable
+
+**Usage**:
+```python
+result = await kit.execute("workflow.json", params)
+
+# Access output by variable name
+cover_images = result.images_by_var["cover"]
+print(f"Cover image: {cover_images[0]}")
+```
+
+#### 2. Multiple Output Variables
+
+```json
+{
+  "9": {
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "$output.cover"
+    }
+  },
+  "15": {
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "$output.thumbnail"
+    }
+  }
+}
+```
+
+**Usage**:
+```python
+result = await kit.execute("workflow.json", params)
+
+# Get different outputs separately
+cover = result.images_by_var["cover"][0]
+thumbnail = result.images_by_var["thumbnail"][0]
+```
+
+#### 3. Automatic Output Recognition (no marker needed)
+
+If you don't use `$output.xxx` markers, ComfyKit auto-detects output nodes:
+
+```json
+{
+  "9": {
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Final Output"
+    }
+  }
+}
+```
+
+**Usage**:
+```python
+result = await kit.execute("workflow.json", params)
+
+# All images are in the images list
+all_images = result.images
+
+# Access by node ID
+images_from_node_9 = result.images_by_var["9"]
+```
+
+### DSL Best Practices
+
+1. **Parameter Naming**: Use descriptive names like `$positive_prompt` instead of `$p`
+2. **Required Markers**: Use `!` for parameters with no reasonable default
+3. **Upload Markers**: Use `~` for image, video, audio parameters
+4. **Output Variables**: Use `$output.xxx` for important outputs to make them easy to reference
+5. **Display Text**: Add descriptive text in multi-param markers, e.g. `"Size, $width!, $height!"`
+
+### Complete Example
+
+A complete Text-to-Image workflow with DSL markers:
+
+```json
+{
+  "4": {
+    "class_type": "CheckpointLoaderSimple",
+    "_meta": {
+      "title": "$model.ckpt_name"
+    },
+    "inputs": {
+      "ckpt_name": "sd_xl_base_1.0.safetensors"
+    }
+  },
+  "5": {
+    "class_type": "EmptyLatentImage",
+    "_meta": {
+      "title": "Canvas, $width!, $height!"
+    },
+    "inputs": {
+      "width": 1024,
+      "height": 1024,
+      "batch_size": 1
+    }
+  },
+  "6": {
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "$prompt.text!"
+    },
+    "inputs": {
+      "text": "a beautiful landscape",
+      "clip": ["4", 1]
+    }
+  },
+  "9": {
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "$output.result"
+    },
+    "inputs": {
+      "filename_prefix": "output",
+      "images": ["8", 0]
+    }
+  }
+}
+```
+
+**Execution**:
+```python
+result = await kit.execute("t2i_workflow.json", {
+    "prompt": "a cute cat playing with yarn",
+    "width": 1024,
+    "height": 768,
+    "model": "dreamshaper_8.safetensors"  # Optional, has default
+})
+
+# Get result
+output_image = result.images_by_var["result"][0]
+```
+
+---
+
 ## ⚙️ Configuration
 
 ### Configuration Priority

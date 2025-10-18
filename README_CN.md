@@ -258,6 +258,311 @@ print(f"缩略图: {result.images_by_var['thumbnail']}")
 
 ---
 
+## 🏷️ Workflow DSL 标记速查表
+
+ComfyKit 提供了一套简洁的 DSL（领域特定语言）来标记 workflow 节点，让你能够：
+- 定义可传参的动态参数
+- 标记输出变量
+- 指定必填/可选参数
+- 自动处理媒体文件上传
+
+### DSL 语法速查表
+
+| 标记语法 | 说明 | 示例 | 效果 |
+|---------|------|------|------|
+| `$param` | 基本参数（shorthand） | `$prompt` | 参数名 `prompt`，映射到同名字段 `prompt` |
+| `$param.field` | 指定字段映射 | `$prompt.text` | 参数名 `prompt`，映射到字段 `text` |
+| `$param!` | 必填参数 | `$prompt!` | 参数 `prompt` 必填，无默认值 |
+| `$~param` | 需要上传的媒体参数 | `$~image` | 参数 `image` 需要文件上传 |
+| `$~param!` | 必填的媒体参数 | `$~image!` | 参数 `image` 必填且需要上传 |
+| `$param.~field!` | 组合标记 | `$img.~image!` | 参数 `img` 映射到 `image` 字段，必填且需上传 |
+| `$output.name` | 输出变量标记 | `$output.cover` | 标记输出变量名为 `cover` |
+| `Text, $p1, $p2` | 多参数标记 | `Size, $width!, $height!` | 一个节点定义多个参数 |
+
+### 参数标记示例
+
+#### 1. 文本提示词参数
+
+在 ComfyUI workflow 的 CLIPTextEncode 节点中：
+
+```json
+{
+  "6": {
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "$prompt.text!"
+    },
+    "inputs": {
+      "text": "a beautiful landscape",
+      "clip": ["4", 1]
+    }
+  }
+}
+```
+
+**标记说明**：
+- `$prompt` - 参数名为 `prompt`
+- `.text` - 映射到节点的 `text` 字段
+- `!` - 必填参数，执行时必须提供
+
+**使用**：
+```python
+result = await kit.execute("workflow.json", {
+    "prompt": "a cute cat"  # 会替换 inputs.text 的值
+})
+```
+
+#### 2. 图像上传参数
+
+在 LoadImage 节点中：
+
+```json
+{
+  "10": {
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "$~input_image!"
+    },
+    "inputs": {
+      "image": "default.png"
+    }
+  }
+}
+```
+
+**标记说明**：
+- `$~input_image!` - 参数名 `input_image`，需要上传（`~`），必填（`!`）
+- ComfyKit 会自动处理文件上传
+
+**使用**：
+```python
+result = await kit.execute("workflow.json", {
+    "input_image": "/path/to/cat.jpg"  # 自动上传到 ComfyUI
+})
+```
+
+#### 3. 多个参数在一个节点
+
+```json
+{
+  "5": {
+    "class_type": "EmptyLatentImage",
+    "_meta": {
+      "title": "Size, $width!, $height!"
+    },
+    "inputs": {
+      "width": 512,
+      "height": 512,
+      "batch_size": 1
+    }
+  }
+}
+```
+
+**标记说明**：
+- `Size` - 显示文本，不是参数
+- `$width!` - 必填参数 `width`（shorthand，映射到同名字段）
+- `$height!` - 必填参数 `height`
+
+**使用**：
+```python
+result = await kit.execute("workflow.json", {
+    "width": 1024,
+    "height": 768
+})
+```
+
+#### 4. 可选参数（带默认值）
+
+```json
+{
+  "3": {
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "Sampler, $seed, $steps"
+    },
+    "inputs": {
+      "seed": 0,          # 默认值 0
+      "steps": 20,        # 默认值 20
+      "cfg": 8.0,
+      "model": ["4", 0]
+    }
+  }
+}
+```
+
+**标记说明**：
+- `$seed` 和 `$steps` 没有 `!`，是可选参数
+- 如果不传参数，使用 workflow 中的默认值
+
+**使用**：
+```python
+# 使用默认值
+result = await kit.execute("workflow.json", {})
+
+# 覆盖部分参数
+result = await kit.execute("workflow.json", {
+    "seed": 42  # 只覆盖 seed，steps 用默认值 20
+})
+```
+
+### 输出标记示例
+
+#### 1. 使用输出变量标记
+
+```json
+{
+  "9": {
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "$output.cover"
+    },
+    "inputs": {
+      "filename_prefix": "book_cover",
+      "images": ["8", 0]
+    }
+  }
+}
+```
+
+**标记说明**：
+- `$output.cover` - 标记这个节点的输出为 `cover` 变量
+
+**使用**：
+```python
+result = await kit.execute("workflow.json", params)
+
+# 通过变量名访问输出
+cover_images = result.images_by_var["cover"]
+print(f"封面图片: {cover_images[0]}")
+```
+
+#### 2. 多个输出变量
+
+```json
+{
+  "9": {
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "$output.cover"
+    }
+  },
+  "15": {
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "$output.thumbnail"
+    }
+  }
+}
+```
+
+**使用**：
+```python
+result = await kit.execute("workflow.json", params)
+
+# 分别获取不同的输出
+cover = result.images_by_var["cover"][0]
+thumbnail = result.images_by_var["thumbnail"][0]
+```
+
+#### 3. 自动输出识别（无需标记）
+
+如果没有使用 `$output.xxx` 标记，ComfyKit 会自动识别输出节点：
+
+```json
+{
+  "9": {
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Final Output"
+    }
+  }
+}
+```
+
+**使用**：
+```python
+result = await kit.execute("workflow.json", params)
+
+# 所有图片都在 images 列表中
+all_images = result.images
+
+# 按节点 ID 访问
+images_from_node_9 = result.images_by_var["9"]
+```
+
+### DSL 最佳实践
+
+1. **参数命名**：使用描述性的参数名，如 `$positive_prompt` 而不是 `$p`
+2. **必填标记**：对于无合理默认值的参数使用 `!` 标记
+3. **上传标记**：对图片、视频、音频等媒体参数使用 `~` 标记
+4. **输出变量**：为重要输出使用 `$output.xxx` 命名，便于程序引用
+5. **显示文本**：在多参数标记中添加描述文本，如 `"Size, $width!, $height!"`
+
+### 完整示例
+
+一个完整的 Text-to-Image workflow DSL 标记示例：
+
+```json
+{
+  "4": {
+    "class_type": "CheckpointLoaderSimple",
+    "_meta": {
+      "title": "$model.ckpt_name"
+    },
+    "inputs": {
+      "ckpt_name": "sd_xl_base_1.0.safetensors"
+    }
+  },
+  "5": {
+    "class_type": "EmptyLatentImage",
+    "_meta": {
+      "title": "Canvas, $width!, $height!"
+    },
+    "inputs": {
+      "width": 1024,
+      "height": 1024,
+      "batch_size": 1
+    }
+  },
+  "6": {
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "$prompt.text!"
+    },
+    "inputs": {
+      "text": "a beautiful landscape",
+      "clip": ["4", 1]
+    }
+  },
+  "9": {
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "$output.result"
+    },
+    "inputs": {
+      "filename_prefix": "output",
+      "images": ["8", 0]
+    }
+  }
+}
+```
+
+**执行**：
+```python
+result = await kit.execute("t2i_workflow.json", {
+    "prompt": "a cute cat playing with yarn",
+    "width": 1024,
+    "height": 768,
+    "model": "dreamshaper_8.safetensors"  # 可选，有默认值
+})
+
+# 获取结果
+output_image = result.images_by_var["result"][0]
+```
+
+---
+
 ## ⚙️ 配置说明
 
 ### 配置优先级

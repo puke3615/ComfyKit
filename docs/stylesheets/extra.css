@@ -1,0 +1,17 @@
+/* Custom styles for ComfyKit documentation */
+
+/* Add some custom styling if needed */
+.md-typeset h1 {
+    font-weight: 600;
+}
+
+.md-typeset code {
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 0.1em 0.3em;
+}
+
+/* Dark mode adjustments */
+[data-md-color-scheme="slate"] .md-typeset code {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+

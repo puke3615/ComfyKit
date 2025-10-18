@@ -1,0 +1,150 @@
+site_name: ComfyKit
+site_description: ComfyUI Python SDK for developers - Build AI generation into your app
+site_author: Fan Wu
+site_url: https://puke3615.github.io/ComfyKit
+
+repo_name: puke3615/ComfyKit
+repo_url: https://github.com/puke3615/ComfyKit
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  language: en
+  palette:
+    # Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  font:
+    text: Roboto
+    code: Roboto Mono
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search:
+      lang:
+        - en
+        - zh
+  - i18n:
+      docs_structure: folder
+      languages:
+        - locale: en
+          default: true
+          name: English
+          build: true
+        - locale: zh
+          name: 中文
+          build: true
+          nav_translations:
+            Home: 首页
+            Quick Start: 快速开始
+            Installation: 安装
+            Usage Guide: 使用指南
+            Configuration: 配置
+            Workflow DSL: Workflow DSL
+            API Reference: API 参考
+            Examples: 示例
+            Development: 开发
+            Contributing: 贡献
+            License: 许可证
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+nav:
+  - Home: index.md
+  - Quick Start: quick-start.md
+  - Installation: installation.md
+  - Usage Guide:
+      - Basic Usage: usage/basic.md
+      - Local ComfyUI: usage/local.md
+      - RunningHub Cloud: usage/cloud.md
+      - Result Processing: usage/results.md
+  - Workflow DSL:
+      - Overview: dsl/overview.md
+      - Parameters: dsl/parameters.md
+      - Outputs: dsl/outputs.md
+      - Best Practices: dsl/best-practices.md
+  - Configuration: configuration.md
+  - API Reference: api-reference.md
+  - Examples: examples.md
+  - Development: development.md
+  - Contributing: contributing.md
+  - License: license.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/puke3615/ComfyKit
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/comfykit/
+  version:
+    provider: mike
+
+extra_css:
+  - stylesheets/extra.css
+
+copyright: Copyright &copy; 2024 Fan Wu
+

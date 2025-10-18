@@ -51,3 +51,6 @@ quick_test.py
 # Keep important files
 !LICENSE
 !README.md
+
+# MkDocs build output
+site/

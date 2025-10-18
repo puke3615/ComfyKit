@@ -11,17 +11,16 @@
 [![PyPI version](https://badge.fury.io/py/comfykit.svg)](https://pypi.org/project/comfykit/)
 [![Python](https://img.shields.io/pypi/pyversions/comfykit.svg)](https://pypi.org/project/comfykit/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![PyPI downloads](https://img.shields.io/pypi/dm/comfykit)](https://pypi.org/project/comfykit/)
 [![GitHub stars](https://img.shields.io/github/stars/puke3615/ComfyKit?style=social)](https://github.com/puke3615/ComfyKit)
 [![GitHub last commit](https://img.shields.io/github/last-commit/puke3615/ComfyKit)](https://github.com/puke3615/ComfyKit)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/puke3615/ComfyKit/pulls)
 
-[📖 在线文档](https://puke3615.github.io/ComfyKit/) • 
-[🚀 快速开始](#-快速开始) • 
-[🎯 DSL 标记](#️-workflow-dsl-标记速查表) • 
-[💡 示例代码](examples/) • 
-[❓ 问题反馈](https://github.com/puke3615/ComfyKit/issues)
+[**📖 在线文档**](https://puke3615.github.io/ComfyKit/) | 
+[**🚀 快速开始**](#-快速开始) | 
+[**🎯 DSL 标记**](#️-workflow-dsl-标记速查表) | 
+[**💡 示例代码**](examples/) | 
+[**❓ 问题反馈**](https://github.com/puke3615/ComfyKit/issues)
 
 </div>
 

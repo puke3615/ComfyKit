@@ -14,9 +14,6 @@
   <a href="https://opensource.org/licenses/MIT">
     <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT">
   </a>
-  <a href="https://pypi.org/project/comfykit/">
-    <img src="https://img.shields.io/pypi/dm/comfykit" alt="PyPI downloads">
-  </a>
   <a href="https://github.com/puke3615/ComfyKit">
     <img src="https://img.shields.io/github/stars/puke3615/ComfyKit?style=social" alt="GitHub stars">
   </a>
@@ -31,11 +28,11 @@
   </a>
 
   <p>
-    <a href="https://puke3615.github.io/ComfyKit/">📖 Documentation</a> • 
-    <a href="#-quick-start">🚀 Quick Start</a> • 
-    <a href="#️-workflow-dsl-quick-reference">🎯 DSL Reference</a> • 
-    <a href="https://github.com/puke3615/ComfyKit/tree/main/examples">💡 Examples</a> • 
-    <a href="https://github.com/puke3615/ComfyKit/issues">❓ Issues</a>
+    <a href="https://puke3615.github.io/ComfyKit/"><strong>📖 Documentation</strong></a> | 
+    <a href="#-quick-start"><strong>🚀 Quick Start</strong></a> | 
+    <a href="#️-workflow-dsl-quick-reference"><strong>🎯 DSL Reference</strong></a> | 
+    <a href="https://github.com/puke3615/ComfyKit/tree/main/examples"><strong>💡 Examples</strong></a> | 
+    <a href="https://github.com/puke3615/ComfyKit/issues"><strong>❓ Issues</strong></a>
   </p>
 </div>
 

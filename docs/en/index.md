@@ -14,6 +14,29 @@
   <a href="https://opensource.org/licenses/MIT">
     <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT">
   </a>
+  <a href="https://pypi.org/project/comfykit/">
+    <img src="https://img.shields.io/pypi/dm/comfykit" alt="PyPI downloads">
+  </a>
+  <a href="https://github.com/puke3615/ComfyKit">
+    <img src="https://img.shields.io/github/stars/puke3615/ComfyKit?style=social" alt="GitHub stars">
+  </a>
+  <a href="https://github.com/puke3615/ComfyKit">
+    <img src="https://img.shields.io/github/last-commit/puke3615/ComfyKit" alt="GitHub last commit">
+  </a>
+  <a href="https://github.com/astral-sh/ruff">
+    <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json" alt="Ruff">
+  </a>
+  <a href="https://github.com/puke3615/ComfyKit/pulls">
+    <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome">
+  </a>
+
+  <p>
+    <a href="https://puke3615.github.io/ComfyKit/">📖 Documentation</a> • 
+    <a href="#-quick-start">🚀 Quick Start</a> • 
+    <a href="#️-workflow-dsl-quick-reference">🎯 DSL Reference</a> • 
+    <a href="https://github.com/puke3615/ComfyKit/tree/main/examples">💡 Examples</a> • 
+    <a href="https://github.com/puke3615/ComfyKit/issues">❓ Issues</a>
+  </p>
 </div>
 
 ---

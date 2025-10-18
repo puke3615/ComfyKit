@@ -87,10 +87,11 @@ result.duration        # 执行耗时
 ---
 
 <div align="center">
-
-**如果 ComfyKit 对你有帮助，请给个 ⭐ Star！**
-
-[GitHub](https://github.com/puke3615/ComfyKit) · [PyPI](https://pypi.org/project/comfykit/) · [Issues](https://github.com/puke3615/ComfyKit/issues)
-
+  <p><strong>如果 ComfyKit 对你有帮助，请给个 ⭐ Star！</strong></p>
+  <p>
+    <a href="https://github.com/puke3615/ComfyKit">GitHub</a> · 
+    <a href="https://pypi.org/project/comfykit/">PyPI</a> · 
+    <a href="https://github.com/puke3615/ComfyKit/issues">Issues</a>
+  </p>
 </div>
 

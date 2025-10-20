@@ -47,10 +47,14 @@
 ```python
 from comfykit import ComfyKit
 
-kit = ComfyKit()
+# Connect to local ComfyUI server
+kit = ComfyKit(comfyui_url="http://127.0.0.1:8188")
 result = await kit.execute("workflow.json", {"prompt": "a cute cat"})
 
 print(result.images)  # ['http://127.0.0.1:8188/view?filename=cat_001.png']
+
+# 🌐 Or use RunningHub cloud (no local GPU needed)
+# kit = ComfyKit(runninghub_api_key="rh-xxx")
 ```
 
 ### 获得结构化的返回数据

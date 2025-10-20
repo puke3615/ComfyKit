@@ -35,10 +35,14 @@
 ```python
 from comfykit import ComfyKit
 
-kit = ComfyKit()
+# Connect to local ComfyUI server
+kit = ComfyKit(comfyui_url="http://127.0.0.1:8188")
 result = await kit.execute("workflow.json", {"prompt": "a cute cat"})
 
 print(result.images)  # ['http://127.0.0.1:8188/view?filename=cat_001.png']
+
+# 🌐 Or use RunningHub cloud (no local GPU needed)
+# kit = ComfyKit(runninghub_api_key="rh-xxx")
 ```
 
 ### Get structured data back
@@ -129,8 +133,8 @@ import asyncio
 from comfykit import ComfyKit
 
 async def main():
-    # Initialize (uses default config)
-    kit = ComfyKit()
+    # Connect to local ComfyUI (default: http://127.0.0.1:8188)
+    kit = ComfyKit(comfyui_url="http://127.0.0.1:8188")
     
     # Execute workflow
     result = await kit.execute(
@@ -148,6 +152,8 @@ async def main():
 asyncio.run(main())
 ```
 
+> 💡 **Tip**: `comfyui_url` defaults to `http://127.0.0.1:8188` and can be omitted
+
 ---
 
 ## 📚 Usage Examples
@@ -157,8 +163,8 @@ asyncio.run(main())
 ```python
 from comfykit import ComfyKit
 
-# Connect to local ComfyUI (default)
-kit = ComfyKit()
+# Connect to local ComfyUI
+kit = ComfyKit(comfyui_url="http://127.0.0.1:8188")  # Default, can be omitted
 
 # Execute local workflow file
 result = await kit.execute("workflow.json", {

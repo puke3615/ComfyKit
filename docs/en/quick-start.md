@@ -47,8 +47,8 @@ import asyncio
 from comfykit import ComfyKit
 
 async def main():
-    # Initialize (uses default config)
-    kit = ComfyKit()
+    # Connect to local ComfyUI (default: http://127.0.0.1:8188)
+    kit = ComfyKit(comfyui_url="http://127.0.0.1:8188")
     
     # Execute workflow
     result = await kit.execute(
@@ -65,6 +65,8 @@ async def main():
 
 asyncio.run(main())
 ```
+
+> 💡 **Tip**: `comfyui_url` defaults to `http://127.0.0.1:8188` and can be omitted
 
 ## Understanding the Results
 

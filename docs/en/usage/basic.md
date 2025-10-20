@@ -7,6 +7,7 @@ The most basic usage is to execute a local workflow file:
 ```python
 from comfykit import ComfyKit
 
+# Connect to local ComfyUI (default: http://127.0.0.1:8188)
 kit = ComfyKit()
 
 # Execute local workflow file

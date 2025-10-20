@@ -7,6 +7,7 @@
 ```python
 from comfykit import ComfyKit
 
+# Connect to local ComfyUI (default: http://127.0.0.1:8188)
 kit = ComfyKit()
 
 # 执行本地 workflow 文件

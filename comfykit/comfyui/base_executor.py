@@ -23,9 +23,6 @@ MEDIA_UPLOAD_NODE_TYPES = {
     'VHS_LoadVideo',
 }
 
-TEMP_DIR = get_data_path("temp")
-os.makedirs(TEMP_DIR, exist_ok=True)
-
 class ComfyUIExecutor(ABC):
     """ComfyUI executor abstract base class"""
 
@@ -207,7 +204,7 @@ class ComfyUIExecutor(ABC):
 
                 # Save to temporary file
                 suffix = os.path.splitext(filename)[1] or ".jpg"
-                with tempfile.NamedTemporaryFile(delete=False, suffix=suffix, dir=TEMP_DIR) as tmp:
+                with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
                     tmp.write(media_data)
                     temp_path = tmp.name
 

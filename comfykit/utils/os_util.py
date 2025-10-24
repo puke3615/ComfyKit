@@ -30,13 +30,6 @@ def get_src_path(*paths: str) -> str:
         return os.path.join(SRC_PATH, *paths)
     return str(SRC_PATH)
 
-def get_temp_path(*paths: str) -> str:
-    """Get path relative to ComfyKit root path temp folder"""
-    temp_path = get_root_path("temp")
-    if paths:
-        return os.path.join(temp_path, *paths)
-    return temp_path
-
 def save_base64_to_file(base64_str, file_path):
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     with open(file_path, "wb") as f:

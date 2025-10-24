@@ -10,9 +10,6 @@ import aiohttp
 from comfykit.logger import logger
 from comfykit.utils.os_util import get_data_path
 
-TEMP_DIR = get_data_path("temp")
-os.makedirs(TEMP_DIR, exist_ok=True)
-
 
 @overload
 async def download_files(file_urls: str, suffix: str = None, auto_cleanup: bool = True, cookies: dict = None) -> AsyncGenerator[str, None]:
@@ -66,7 +63,7 @@ async def download_files(file_urls: Union[str, List[str]], suffix: str = None, a
                     if not file_suffix:
                         file_suffix = '.tmp'  # Default suffix
 
-            with tempfile.NamedTemporaryFile(delete=False, suffix=file_suffix, dir=TEMP_DIR) as temp_file:
+            with tempfile.NamedTemporaryFile(delete=False, suffix=file_suffix) as temp_file:
                 temp_file.write(file_content)
                 temp_file.flush()
                 os.fsync(temp_file.fileno())
@@ -89,32 +86,6 @@ async def download_files(file_urls: Union[str, List[str]], suffix: str = None, a
     finally:
         if auto_cleanup:
             cleanup_temp_files(temp_file_paths)
-
-
-@contextmanager
-def create_temp_file(suffix: str = '.tmp') -> Generator[str, None, None]:
-    """
-    Create a context manager for a temporary file.
-    
-    Args:
-        suffix: Temporary file suffix
-        
-    Yields:
-        str: Temporary file path
-        
-    Automatically clean up temporary files
-    """
-    temp_file_path = None
-    try:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix, dir=TEMP_DIR) as temp_file:
-            temp_file_path = temp_file.name
-
-        logger.debug(f"Created temporary file: {temp_file_path}")
-        yield temp_file_path
-
-    finally:
-        if temp_file_path:
-            cleanup_temp_files(temp_file_path)
 
 
 def get_ext_from_content_type(content_type: str) -> str:

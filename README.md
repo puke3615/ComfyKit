@@ -253,6 +253,15 @@ ComfyKit provides a concise DSL (Domain Specific Language) for marking workflow 
 
 ### DSL Syntax Quick Reference
 
+These DSL markers are written in the **title field of ComfyUI workflow nodes** to convert fixed workflows into parameterizable templates.
+
+**Usage Steps**:
+1. In ComfyUI editor, double-click a node and modify its title to add DSL markers (e.g., `$prompt.text!`)
+2. Save as **API format JSON** (select "Save (API Format)" from menu, not regular "Save")
+3. Execute with parameters via `kit.execute("workflow.json", {"prompt": "value"})`
+
+> ⚠️ **Important**: ComfyKit requires API format workflow JSON, not UI format.
+
 | Syntax | Description | Example | Effect |
 |--------|-------------|---------|--------|
 | `$param` | Basic parameter (shorthand) | `$prompt` | Parameter `prompt`, maps to field `prompt` |

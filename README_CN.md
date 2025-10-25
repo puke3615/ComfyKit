@@ -284,6 +284,15 @@ ComfyKit 提供了一套简洁的 DSL（领域特定语言）来标记 workflow 
 
 ### DSL 语法速查表
 
+这些 DSL 标记写在 **ComfyUI workflow 节点的 title 字段**中，用于将固定的 workflow 转换为可参数化的模板。
+
+**使用步骤**：
+1. 在 ComfyUI 编辑器中双击节点，修改 title 添加 DSL 标记（如 `$prompt.text!`）
+2. 保存为 **API 格式 JSON**（菜单选择 "Save (API Format)"，不是普通 "Save"）
+3. 通过 `kit.execute("workflow.json", {"prompt": "value"})` 传参执行
+
+> ⚠️ **注意**：必须使用 API 格式的 workflow JSON，不是 UI 格式。
+
 | 标记语法 | 说明 | 示例 | 效果 |
 |---------|------|------|------|
 | `$param` | 基本参数（shorthand） | `$prompt` | 参数名 `prompt`，映射到同名字段 `prompt` |

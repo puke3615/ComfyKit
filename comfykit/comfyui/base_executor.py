@@ -19,6 +19,8 @@ from comfykit.utils.os_util import get_data_path
 # Node types that need special media upload handling
 MEDIA_UPLOAD_NODE_TYPES = {
     'LoadImage',
+    'LoadAudio',
+    'LoadVideo',
     'VHS_LoadAudioUpload',
     'VHS_LoadVideo',
 }

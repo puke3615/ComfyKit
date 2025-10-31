@@ -227,20 +227,29 @@ class RunningHubExecutor(ComfyUIExecutor):
         return node_info_list
 
     async def _handle_runninghub_media_upload(self, param_value: Any) -> Any:
-        """Handle media upload for RunningHub, following same logic as base_executor"""
-        # If parameter value is a URL starting with http, upload media first
-        if isinstance(param_value, str) and param_value.startswith(('http://', 'https://')):
-            try:
-                # Download and upload media, get uploaded media fileName
-                media_value = await self._upload_media_from_url(param_value)
-                logger.info(f"Media upload successful: {media_value}")
-                return media_value
-            except Exception as e:
-                logger.error(f"Media upload failed: {str(e)}")
-                raise Exception(f"Media upload failed: {str(e)}")
-        else:
-            # Use parameter value as is (could be a local file path or fileName)
-            return param_value
+        """Handle media upload for RunningHub"""
+        if isinstance(param_value, str):
+            # Handle URL
+            if param_value.startswith(('http://', 'https://')):
+                try:
+                    media_value = await self._upload_media_from_url(param_value)
+                    logger.info(f"Media upload successful (URL): {media_value}")
+                    return media_value
+                except Exception as e:
+                    logger.error(f"Media upload failed: {str(e)}")
+                    raise Exception(f"Media upload failed: {str(e)}")
+            # Handle local file path
+            elif os.path.exists(param_value):
+                try:
+                    uploaded_filename = await self.client.upload_file(param_value)
+                    logger.info(f"Media upload successful (local file): {uploaded_filename}")
+                    return uploaded_filename
+                except Exception as e:
+                    logger.error(f"Failed to upload local file {param_value}: {str(e)}")
+                    raise Exception(f"Failed to upload local file: {str(e)}")
+
+        # Other cases (already a fileName or doesn't need upload)
+        return param_value
 
     async def _upload_media_from_url(self, media_url: str) -> str:
         """Upload media from URL to RunningHub"""

@@ -1,6 +1,6 @@
 [project]
 name = "comfykit"
-version = "0.1.4"
+version = "0.1.5"
 description = "ComfyUI Python SDK for developers - Build AI generation into your app"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -8,7 +8,7 @@ license = { text = "MIT" }
 authors = [
   { name = "Fan Wu", email = "1129090915@qq.com" }
 ]
-keywords = ["ComfyUI", "SDK", "AI", "Image Generation", "API", "Stable Diffusion", "FLUX", "RunningHub"]
+keywords = ["ComfyUI", "SDK", "AI", "AIGC", "Image Generation", "API", "Stable Diffusion", "FLUX", "RunningHub"]
 classifiers = [
   "Development Status :: 4 - Beta",
   "License :: OSI Approved :: MIT License",

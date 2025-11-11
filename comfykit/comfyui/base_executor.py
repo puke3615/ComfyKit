@@ -166,16 +166,26 @@ class ComfyUIExecutor(ABC):
             node_data["inputs"] = {}
 
         # If parameter value is a URL starting with http, upload media first
-        if isinstance(param_value, str) and param_value.startswith(('http://', 'https://')):
-            try:
-                # Upload media and get uploaded media name
-                media_value = await self._upload_media_from_source(param_value)
-                # Use uploaded media name as node input value
-                await self._set_node_param(node_data, input_field, media_value)
-                logger.info(f"Media upload successful: {media_value}")
-            except Exception as e:
-                logger.error(f"Media upload failed: {str(e)}")
-                raise Exception(f"Media upload failed: {str(e)}")
+        if isinstance(param_value, str):
+            if param_value.startswith(('http://', 'https://')):
+                try:
+                    # Upload media and get uploaded media name
+                    media_value = await self._upload_media_from_source(param_value)
+                    # Use uploaded media name as node input value
+                    await self._set_node_param(node_data, input_field, media_value)
+                    logger.info(f"Media upload successful: {media_value}")
+                except Exception as e:
+                    logger.error(f"Media upload failed: {str(e)}")
+                    raise Exception(f"Media upload failed: {str(e)}")
+            # Handle local file path
+            elif os.path.exists(param_value):
+                try:
+                    uploaded_filename = await self._upload_media(param_value)
+                    await self._set_node_param(node_data, input_field, uploaded_filename)
+                    logger.info(f"Media upload successful (local file): {uploaded_filename}")
+                except Exception as e:
+                    logger.error(f"Failed to upload local file {param_value}: {str(e)}")
+                    raise Exception(f"Failed to upload local file: {str(e)}")
         else:
             # Use parameter value as media name
             await self._set_node_param(node_data, input_field, param_value)

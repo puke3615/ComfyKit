@@ -4,6 +4,8 @@ import tempfile
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional
 
+import ssl
+import certifi
 import aiohttp
 import os
 
@@ -30,9 +32,9 @@ class RunningHubClient:
         if not self.api_key:
             raise ValueError("RunningHub API key is required")
 
-    async def _make_request(self, method: str, endpoint: str, data: Optional[Dict] = None,
-                          files: Optional[Dict] = None, timeout: Optional[int] = None) -> Dict[str, Any]:
-        """Make HTTP request to RunningHub API with retry logic"""
+    async def _make_request(self, method: str, endpoint: str, data: Optional[Dict] = None, files: Optional[Dict] = None,
+                            timeout: Optional[int] = None) -> Dict[str, Any]:
+        """Make HTTP request to RunningHub API with retry logic (SSL fixed with certifi)."""
         url = f"{self.base_url}{endpoint}"
         headers = {}
 
@@ -50,11 +52,19 @@ class RunningHubClient:
             headers['Content-Type'] = 'application/json'
             request_data = json.dumps(data) if data else None
 
+        # Build SSL context that uses certifi bundle (resolves Windows / missing CA issues)
+        ssl_ctx = ssl.create_default_context(cafile=certifi.where())
+
+        # Use a TCPConnector with that ssl context
+        connector = aiohttp.TCPConnector(ssl=ssl_ctx)
+
         # Retry logic
         last_exception = None
         for attempt in range(self.retry_count + 1):
             try:
-                async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout or self.timeout)) as session:
+                # trust_env=True lets aiohttp use proxy env vars if present (optional)
+                async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout or self.timeout),
+                                                 connector=connector, trust_env=True) as session:
                     async with session.request(method, url, headers=headers, data=request_data) as response:
                         if response.status == 200:
                             result = await response.json()

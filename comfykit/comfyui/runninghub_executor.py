@@ -28,6 +28,18 @@ class RunningHubExecutor(ComfyUIExecutor):
         self.retry_count = retry_count
         self.client = RunningHubClient(api_key=api_key, base_url=base_url, timeout=timeout, retry_count=retry_count)
 
+    async def close(self):
+        """Close the RunningHub client and cleanup resources"""
+        await self.client.close()
+
+    async def __aenter__(self):
+        """Async context manager entry"""
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Async context manager exit"""
+        await self.close()
+
     async def execute_by_id(self, workflow_id: str, params: Dict[str, Any] = None) -> ExecuteResult:
         """Execute workflow on RunningHub platform by workflow ID directly
         

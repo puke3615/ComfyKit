@@ -28,9 +28,29 @@ class RunningHubClient:
         self.base_url = (base_url or os.getenv("RUNNINGHUB_BASE_URL", "https://www.runninghub.ai")).rstrip('/')
         self.timeout = timeout or int(os.getenv("RUNNINGHUB_TIMEOUT", "300"))
         self.retry_count = retry_count or int(os.getenv("RUNNINGHUB_RETRY_COUNT", "3"))
+        self._session: Optional[aiohttp.ClientSession] = None
 
         if not self.api_key:
             raise ValueError("RunningHub API key is required")
+
+    async def _get_session(self) -> aiohttp.ClientSession:
+        """Get or create shared session for reuse across requests
+        
+        Returns:
+            Shared aiohttp ClientSession instance
+        """
+        if self._session is None or self._session.closed:
+            # Build SSL context that uses certifi bundle (resolves Windows / missing CA issues)
+            ssl_ctx = ssl.create_default_context(cafile=certifi.where())
+            connector = aiohttp.TCPConnector(ssl=ssl_ctx)
+            timeout_config = aiohttp.ClientTimeout(total=self.timeout)
+            self._session = aiohttp.ClientSession(
+                timeout=timeout_config,
+                connector=connector,
+                trust_env=True
+            )
+            logger.debug("Created new aiohttp ClientSession")
+        return self._session
 
     async def _make_request(self, method: str, endpoint: str, data: Optional[Dict] = None, files: Optional[Dict] = None,
                             timeout: Optional[int] = None) -> Dict[str, Any]:
@@ -52,32 +72,37 @@ class RunningHubClient:
             headers['Content-Type'] = 'application/json'
             request_data = json.dumps(data) if data else None
 
-        # Build SSL context that uses certifi bundle (resolves Windows / missing CA issues)
-        ssl_ctx = ssl.create_default_context(cafile=certifi.where())
-
-        # Use a TCPConnector with that ssl context
-        connector = aiohttp.TCPConnector(ssl=ssl_ctx)
-
         # Retry logic
         last_exception = None
         for attempt in range(self.retry_count + 1):
             try:
-                # trust_env=True lets aiohttp use proxy env vars if present (optional)
-                async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout or self.timeout),
-                                                 connector=connector, trust_env=True) as session:
-                    async with session.request(method, url, headers=headers, data=request_data) as response:
-                        if response.status == 200:
-                            result = await response.json()
-                            if result.get('code') == 0:
-                                return result
-                            else:
-                                raise Exception(f"RunningHub API error: {result.get('msg', 'Unknown error')}")
+                # Get or create shared session
+                session = await self._get_session()
+                
+                # Override timeout for this specific request if provided
+                request_timeout = aiohttp.ClientTimeout(total=timeout) if timeout else None
+                
+                async with session.request(method, url, headers=headers, data=request_data, timeout=request_timeout) as response:
+                    if response.status == 200:
+                        result = await response.json()
+                        if result.get('code') == 0:
+                            return result
                         else:
-                            response_text = await response.text()
-                            raise Exception(f"HTTP {response.status}: {response_text}")
+                            raise Exception(f"RunningHub API error: {result.get('msg', 'Unknown error')}")
+                    else:
+                        response_text = await response.text()
+                        raise Exception(f"HTTP {response.status}: {response_text}")
 
             except Exception as e:
                 last_exception = e
+                
+                # If session is closed, recreate it for the next attempt
+                if "Session is closed" in str(e) or "closed" in str(e).lower():
+                    logger.warning("Detected closed session, recreating for next attempt...")
+                    if self._session and not self._session.closed:
+                        await self._session.close()
+                    self._session = None
+                
                 if attempt < self.retry_count:
                     wait_time = 2 ** attempt  # Exponential backoff
                     logger.warning(f"Request failed (attempt {attempt + 1}/{self.retry_count + 1}): {e}. Retrying in {wait_time}s...")
@@ -269,6 +294,21 @@ class RunningHubClient:
         except Exception as e:
             logger.error(f"Failed to query task result for {task_id}: {e}")
             raise
+
+    async def close(self):
+        """Close the shared session and cleanup resources"""
+        if self._session and not self._session.closed:
+            await self._session.close()
+            self._session = None
+            logger.debug("Closed aiohttp ClientSession")
+
+    async def __aenter__(self):
+        """Async context manager entry"""
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Async context manager exit"""
+        await self.close()
 
 
 def get_runninghub_client(api_key: str = None, base_url: str = None) -> RunningHubClient:

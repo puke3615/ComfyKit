@@ -46,7 +46,7 @@ class ComfyKit:
         # RunningHub configuration (cloud execution)
         runninghub_url: Optional[str] = None,
         runninghub_api_key: Optional[str] = None,
-        runninghub_timeout: int = 300,
+        runninghub_timeout: Optional[int] = None,
         runninghub_retry_count: int = 3,
     ):
         """Initialize ComfyKit with flexible configuration
@@ -94,7 +94,8 @@ class ComfyKit:
                                Required for RunningHub workflow execution
             
             runninghub_timeout: Timeout for RunningHub task execution (seconds)
-                               Default: 300 (5 minutes)
+                               Default: None (unlimited, waits until completion)
+                               Set to a positive number to enable timeout
                                Env var: RUNNINGHUB_TIMEOUT
             
             runninghub_retry_count: Number of retries for RunningHub API requests
@@ -138,7 +139,12 @@ class ComfyKit:
         self.runninghub_url = runninghub_url or os.getenv("RUNNINGHUB_BASE_URL", "https://www.runninghub.ai")
         # If runninghub_api_key not set, fall back to api_key (for convenience)
         self.runninghub_api_key = runninghub_api_key or os.getenv("RUNNINGHUB_API_KEY") or self.api_key
-        self.runninghub_timeout = runninghub_timeout if runninghub_timeout != 300 else int(os.getenv("RUNNINGHUB_TIMEOUT", "300"))
+        # Timeout: use param if provided, otherwise env var, otherwise None (unlimited)
+        if runninghub_timeout is not None:
+            self.runninghub_timeout = runninghub_timeout
+        else:
+            env_timeout = os.getenv("RUNNINGHUB_TIMEOUT")
+            self.runninghub_timeout = int(env_timeout) if env_timeout else None
         self.runninghub_retry_count = runninghub_retry_count if runninghub_retry_count != 3 else int(os.getenv("RUNNINGHUB_RETRY_COUNT", "3"))
         
         # Normalize executor type
@@ -148,6 +154,37 @@ class ComfyKit:
         self._http_executor = None
         self._websocket_executor = None
         self._runninghub_executor = None
+
+    async def close(self):
+        """Close all executors and cleanup resources
+        
+        Call this method when you're done using ComfyKit to properly close
+        all internal connections and sessions.
+        
+        Example:
+            >>> kit = ComfyKit()
+            >>> try:
+            ...     result = await kit.execute("workflow.json", params)
+            ... finally:
+            ...     await kit.close()
+        """
+        # Close all initialized executors
+        if self._runninghub_executor is not None:
+            await self._runninghub_executor.close()
+        
+        if self._http_executor is not None:
+            await self._http_executor.close()
+        
+        if self._websocket_executor is not None:
+            await self._websocket_executor.close()
+
+    async def __aenter__(self):
+        """Async context manager entry"""
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Async context manager exit"""
+        await self.close()
 
     def _get_http_executor(self) -> HttpExecutor:
         """Get or create HTTP executor"""

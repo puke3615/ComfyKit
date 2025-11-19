@@ -21,13 +21,16 @@ class RunningHubClient:
         Args:
             api_key: RunningHub API key (optional, reads from RUNNINGHUB_API_KEY env var)
             base_url: RunningHub API base URL (optional, default: https://www.runninghub.ai)
-            timeout: Request timeout in seconds (optional, default: 300)
+            timeout: Request timeout in seconds (optional, default: 300 for HTTP requests)
+                    Note: This is the timeout for individual HTTP requests, not task completion
             retry_count: Number of retries (optional, default: 3)
         """
         self.api_key = api_key or os.getenv("RUNNINGHUB_API_KEY")
         self.base_url = (base_url or os.getenv("RUNNINGHUB_BASE_URL", "https://www.runninghub.ai")).rstrip('/')
-        self.timeout = timeout or int(os.getenv("RUNNINGHUB_TIMEOUT", "300"))
-        self.retry_count = retry_count or int(os.getenv("RUNNINGHUB_RETRY_COUNT", "3"))
+        # HTTP request timeout (not task completion timeout)
+        # Default to 300s for individual API calls, can be overridden by env var
+        self.timeout = timeout if timeout is not None else int(os.getenv("RUNNINGHUB_TIMEOUT", "300"))
+        self.retry_count = retry_count if retry_count is not None else int(os.getenv("RUNNINGHUB_RETRY_COUNT", "3"))
         self._session: Optional[aiohttp.ClientSession] = None
 
         if not self.api_key:
@@ -49,7 +52,7 @@ class RunningHubClient:
                 connector=connector,
                 trust_env=True
             )
-            logger.debug("Created new aiohttp ClientSession")
+            logger.info("Created new aiohttp ClientSession for RunningHub API")
         return self._session
 
     async def _make_request(self, method: str, endpoint: str, data: Optional[Dict] = None, files: Optional[Dict] = None,
@@ -250,14 +253,17 @@ class RunningHubClient:
             logger.error(f"Failed to create task for {workflow_id}: {e}")
             raise
 
-    async def query_task_status(self, task_id: str) -> Literal["QUEUED", "RUNNING", "FAILED", "SUCCESS"]:
-        """Query task execution status
+    async def query_task_status(self, task_id: str) -> Dict[str, Any]:
+        """Query task execution status with detailed information
         
         Args:
             task_id: Task ID
             
         Returns:
-            Task status string: one of "QUEUED", "RUNNING", "FAILED", "SUCCESS"
+            Dictionary containing:
+                - status: Task status string ("QUEUED", "RUNNING", "FAILED", "SUCCESS")
+                - msg: Message from API (contains error details when FAILED)
+                - code: Response code (0 for success, non-zero for failure)
         """
         data = {
             "apiKey": self.api_key,
@@ -266,8 +272,13 @@ class RunningHubClient:
 
         try:
             result = await self._make_request("POST", "/task/openapi/status", data=data)
-            # According to RunningHub API docs, the data field is a string: ["QUEUED","RUNNING","FAILED","SUCCESS"]
-            return result.get('data', 'FAILED')
+            # According to RunningHub API docs: https://www.runninghub.cn/runninghub-api-doc-cn/api-276613252
+            # Response contains: code, msg, data (where data is the status)
+            return {
+                'status': result.get('data', 'FAILED'),
+                'msg': result.get('msg', ''),
+                'code': result.get('code', -1)
+            }
 
         except Exception as e:
             logger.error(f"Failed to query task status for {task_id}: {e}")
@@ -300,7 +311,7 @@ class RunningHubClient:
         if self._session and not self._session.closed:
             await self._session.close()
             self._session = None
-            logger.debug("Closed aiohttp ClientSession")
+            logger.info("Closed aiohttp ClientSession")
 
     async def __aenter__(self):
         """Async context manager entry"""

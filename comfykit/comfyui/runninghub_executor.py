@@ -13,20 +13,23 @@ from comfykit.utils.file_util import download_files
 class RunningHubExecutor(ComfyUIExecutor):
     """RunningHub executor for executing workflows on RunningHub cloud platform"""
 
-    def __init__(self, base_url: str = None, api_key: str = None, timeout: int = 300, retry_count: int = 3):
+    def __init__(self, base_url: str = None, api_key: str = None, timeout: int = None, retry_count: int = 3):
         """Initialize RunningHub executor
         
         Args:
             base_url: RunningHub API base URL (optional)
             api_key: RunningHub API key (optional)
-            timeout: Task timeout in seconds (default: 300)
+            timeout: Task timeout in seconds (default: None, means unlimited)
+                    Set to a positive number to enable timeout
             retry_count: API retry count (default: 3)
         """
         # For RunningHub, base_url is the API base URL
         super().__init__(base_url or "https://www.runninghub.ai", api_key=api_key)
-        self.timeout = timeout
+        self.timeout = timeout  # Task completion timeout (None = unlimited)
         self.retry_count = retry_count
-        self.client = RunningHubClient(api_key=api_key, base_url=base_url, timeout=timeout, retry_count=retry_count)
+        # Note: HTTP request timeout is handled by client with its own default (300s)
+        # We don't pass executor's timeout to client to keep them separate
+        self.client = RunningHubClient(api_key=api_key, base_url=base_url, retry_count=retry_count)
 
     async def close(self):
         """Close the RunningHub client and cleanup resources"""
@@ -39,6 +42,22 @@ class RunningHubExecutor(ComfyUIExecutor):
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Async context manager exit"""
         await self.close()
+
+    def __del__(self):
+        """Destructor to ensure resources are cleaned up
+        
+        This is a safety net in case close() is not called explicitly.
+        """
+        try:
+            if self.client and hasattr(self.client, '_session'):
+                if self.client._session and not self.client._session.closed:
+                    logger.warning(
+                        "RunningHubExecutor destroyed with unclosed session. "
+                        "Please use 'async with' or call 'await executor.close()' explicitly."
+                    )
+        except Exception:
+            # Silently ignore errors in __del__
+            pass
 
     async def execute_by_id(self, workflow_id: str, params: Dict[str, Any] = None) -> ExecuteResult:
         """Execute workflow on RunningHub platform by workflow ID directly
@@ -294,21 +313,31 @@ class RunningHubExecutor(ComfyUIExecutor):
 
     async def _wait_for_task_completion(self, task_id: str, output_id_2_var: Optional[Dict[str, str]] = None, max_wait_time: int = None) -> ExecuteResult:
         """Wait for RunningHub task completion and return results"""
-        max_wait_time = max_wait_time or self.timeout
+        # Use provided max_wait_time, or fall back to self.timeout
+        # If both are None, no timeout limit (wait indefinitely)
+        if max_wait_time is None:
+            max_wait_time = self.timeout
+        
         check_interval = 2
         start_time = time.time()
 
-        logger.info(f"Waiting for RunningHub task completion: {task_id}")
+        timeout_msg = f"{max_wait_time}s" if max_wait_time else "unlimited"
+        logger.info(f"Waiting for RunningHub task completion: {task_id} (timeout: {timeout_msg})")
 
         while True:
             elapsed_time = time.time() - start_time
-            if elapsed_time >= max_wait_time:
+            
+            # Only check timeout if max_wait_time is set (not None)
+            if max_wait_time is not None and elapsed_time >= max_wait_time:
                 break
 
             try:
-                # Query task status
-                task_status = await self.client.query_task_status(task_id)
-                logger.debug(f"Task {task_id} status: {task_status}")
+                # Query task status (now returns dict with status, msg, code)
+                status_info = await self.client.query_task_status(task_id)
+                task_status = status_info['status']
+                status_msg = status_info['msg']
+                
+                logger.debug(f"Task {task_id} status: {task_status}, msg: {status_msg}")
 
                 # RunningHub API only returns: ["QUEUED","RUNNING","FAILED","SUCCESS"]
                 if task_status == 'SUCCESS':
@@ -317,11 +346,16 @@ class RunningHubExecutor(ComfyUIExecutor):
                     return await self._process_task_result(task_id, result_data, output_id_2_var)
 
                 elif task_status == 'FAILED':
-                    # Task failed
+                    # Task failed - use msg from status API (no additional query needed)
+                    error_msg = f"RunningHub task {task_id} failed"
+                    if status_msg:
+                        error_msg += f": {status_msg}"
+                    
+                    logger.error(error_msg)
                     return ExecuteResult(
                         status="error",
                         prompt_id=task_id,
-                        msg="RunningHub task failed"
+                        msg=error_msg
                     )
 
                 elif task_status in ['QUEUED', 'RUNNING']:
@@ -331,15 +365,17 @@ class RunningHubExecutor(ComfyUIExecutor):
                     continue
 
             except Exception as e:
-                logger.error(f"Error checking task status {task_id}: {e}")
+                logger.error(f"Error checking task status {task_id}: {e}", exc_info=True)
                 await asyncio.sleep(check_interval)
                 continue
 
         # Timeout
+        error_msg = f"RunningHub task {task_id} timeout after {max_wait_time} seconds"
+        logger.error(error_msg)
         return ExecuteResult(
             status="error",
             prompt_id=task_id,
-            msg=f"RunningHub task timeout after {max_wait_time} seconds"
+            msg=error_msg
         )
 
     async def _process_task_result(self, task_id: str, result_data: List[Dict[str, Any]], output_id_2_var: Optional[Dict[str, str]] = None) -> ExecuteResult:

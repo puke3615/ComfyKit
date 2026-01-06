@@ -15,7 +15,7 @@ from comfykit.logger import logger
 class RunningHubClient:
     """RunningHub API client for workflow and file operations"""
 
-    def __init__(self, api_key: str = None, base_url: str = None, timeout: int = None, retry_count: int = None):
+    def __init__(self, api_key: str = None, base_url: str = None, timeout: int = None, retry_count: int = None, instance_type: str = None):
         """Initialize RunningHub client
         
         Args:
@@ -24,6 +24,9 @@ class RunningHubClient:
             timeout: Request timeout in seconds (optional, default: 300 for HTTP requests)
                     Note: This is the timeout for individual HTTP requests, not task completion
             retry_count: Number of retries (optional, default: 3)
+            instance_type: Instance type for execution (optional)
+                          Set to "plus" to use 48GB VRAM machine
+                          Default: None (uses RunningHub default instance)
         """
         self.api_key = api_key or os.getenv("RUNNINGHUB_API_KEY")
         self.base_url = (base_url or os.getenv("RUNNINGHUB_BASE_URL", "https://www.runninghub.ai")).rstrip('/')
@@ -31,6 +34,7 @@ class RunningHubClient:
         # Default to 300s for individual API calls, can be overridden by env var
         self.timeout = timeout if timeout is not None else int(os.getenv("RUNNINGHUB_TIMEOUT", "300"))
         self.retry_count = retry_count if retry_count is not None else int(os.getenv("RUNNINGHUB_RETRY_COUNT", "3"))
+        self.instance_type = instance_type or os.getenv("RUNNINGHUB_INSTANCE_TYPE")
         self._session: Optional[aiohttp.ClientSession] = None
 
         if not self.api_key:
@@ -241,6 +245,11 @@ class RunningHubClient:
 
         if node_info_list:
             data["nodeInfoList"] = node_info_list
+
+        # Add instanceType if specified (for high-VRAM machines like 48G)
+        if self.instance_type:
+            data["instanceType"] = self.instance_type
+            logger.info(f"Using instance type: {self.instance_type}")
 
         try:
             result = await self._make_request("POST", "/task/openapi/create", data=data)

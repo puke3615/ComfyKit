@@ -48,6 +48,7 @@ class ComfyKit:
         runninghub_api_key: Optional[str] = None,
         runninghub_timeout: Optional[int] = None,
         runninghub_retry_count: int = 3,
+        runninghub_instance_type: Optional[str] = None,
     ):
         """Initialize ComfyKit with flexible configuration
         
@@ -101,6 +102,11 @@ class ComfyKit:
             runninghub_retry_count: Number of retries for RunningHub API requests
                                    Default: 3
                                    Env var: RUNNINGHUB_RETRY_COUNT
+            
+            runninghub_instance_type: Instance type for RunningHub execution
+                                     Default: None (uses RunningHub default instance)
+                                     Set to "plus" to use 48GB VRAM machine
+                                     Env var: RUNNINGHUB_INSTANCE_TYPE
         
         Examples:
             # Example 1: Default configuration (local ComfyUI)
@@ -146,6 +152,7 @@ class ComfyKit:
             env_timeout = os.getenv("RUNNINGHUB_TIMEOUT")
             self.runninghub_timeout = int(env_timeout) if env_timeout else None
         self.runninghub_retry_count = runninghub_retry_count if runninghub_retry_count != 3 else int(os.getenv("RUNNINGHUB_RETRY_COUNT", "3"))
+        self.runninghub_instance_type = runninghub_instance_type or os.getenv("RUNNINGHUB_INSTANCE_TYPE")
         
         # Normalize executor type
         self.executor_type = self.executor_type.lower()
@@ -213,7 +220,8 @@ class ComfyKit:
                 base_url=self.runninghub_url,
                 api_key=self.runninghub_api_key,
                 timeout=self.runninghub_timeout,
-                retry_count=self.runninghub_retry_count
+                retry_count=self.runninghub_retry_count,
+                instance_type=self.runninghub_instance_type
             )
         return self._runninghub_executor
 

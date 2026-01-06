@@ -13,7 +13,7 @@ from comfykit.utils.file_util import download_files
 class RunningHubExecutor(ComfyUIExecutor):
     """RunningHub executor for executing workflows on RunningHub cloud platform"""
 
-    def __init__(self, base_url: str = None, api_key: str = None, timeout: int = None, retry_count: int = 3):
+    def __init__(self, base_url: str = None, api_key: str = None, timeout: int = None, retry_count: int = 3, instance_type: str = None):
         """Initialize RunningHub executor
         
         Args:
@@ -22,14 +22,17 @@ class RunningHubExecutor(ComfyUIExecutor):
             timeout: Task timeout in seconds (default: None, means unlimited)
                     Set to a positive number to enable timeout
             retry_count: API retry count (default: 3)
+            instance_type: Instance type for execution (optional)
+                          Set to "plus" to use 48GB VRAM machine
         """
         # For RunningHub, base_url is the API base URL
         super().__init__(base_url or "https://www.runninghub.ai", api_key=api_key)
         self.timeout = timeout  # Task completion timeout (None = unlimited)
         self.retry_count = retry_count
+        self.instance_type = instance_type
         # Note: HTTP request timeout is handled by client with its own default (300s)
         # We don't pass executor's timeout to client to keep them separate
-        self.client = RunningHubClient(api_key=api_key, base_url=base_url, retry_count=retry_count)
+        self.client = RunningHubClient(api_key=api_key, base_url=base_url, retry_count=retry_count, instance_type=instance_type)
 
     async def close(self):
         """Close the RunningHub client and cleanup resources"""

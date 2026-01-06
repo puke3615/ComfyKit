@@ -599,7 +599,10 @@ kit = ComfyKit(
     runninghub_timeout=300,  # Default: 5 minutes
     
     # Retry count
-    runninghub_retry_count=3  # Default: 3 retries
+    runninghub_retry_count=3,  # Default: 3 retries
+    
+    # Instance type (optional)
+    runninghub_instance_type="plus"  # Use 48GB VRAM machine
 )
 ```
 
@@ -617,6 +620,7 @@ export RUNNINGHUB_BASE_URL="https://www.runninghub.ai"
 export RUNNINGHUB_API_KEY="rh-key-xxx"
 export RUNNINGHUB_TIMEOUT="300"
 export RUNNINGHUB_RETRY_COUNT="3"
+export RUNNINGHUB_INSTANCE_TYPE="plus"  # Optional, use 48GB VRAM machine
 ```
 
 ---
@@ -652,6 +656,7 @@ class ComfyKit:
         runninghub_api_key: Optional[str] = None,
         runninghub_timeout: int = 300,
         runninghub_retry_count: int = 3,
+        runninghub_instance_type: Optional[str] = None,  # "plus" = 48GB VRAM
     ):
         """Initialize ComfyKit
         
